@@ -12,7 +12,7 @@ export function DataProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Try to load from API (backend), fallback to bundled JSON
+    // Load from API (backend), fallback to bundled JSON
     async function load() {
       try {
         const [sr, mr, lr] = await Promise.allSettled([
@@ -20,11 +20,12 @@ export function DataProvider({ children }) {
           fetch('/api/models').then(r => r.json()),
           fetch('/api/locations').then(r => r.json()),
         ])
-        setStores(sr.status === 'fulfilled' && Array.isArray(sr.value) ? sr.value : storesJson)
+        const loadedStores = sr.status === 'fulfilled' && Array.isArray(sr.value) ? sr.value : storesJson
+        setStores(loadedStores.map(s => ({ ...s, status: s.status || 'active' })))
         setModels(mr.status === 'fulfilled' && Array.isArray(mr.value) ? mr.value : modelsJson)
         setLocations(lr.status === 'fulfilled' && Array.isArray(lr.value) ? lr.value : locationsJson)
       } catch {
-        setStores(storesJson)
+        setStores(storesJson.map(s => ({ ...s, status: s.status || 'active' })))
         setModels(modelsJson)
         setLocations(locationsJson)
       } finally {
@@ -34,17 +35,20 @@ export function DataProvider({ children }) {
     load()
   }, [])
 
-  // Derived: unique hangs
-  const hangs = [...new Set(stores.map(s => s.hang))].sort()
+  // Active stores filter helper (for public survey)
+  const activeStores = stores.filter(s => s.status !== 'inactive')
 
-  // Get regions for a hang
+  // Derived: unique hangs (only active stores)
+  const hangs = [...new Set(activeStores.map(s => s.hang))].sort()
+
+  // Get regions for a hang (only active stores)
   const regionsForHang = useCallback((hang) => {
-    return [...new Set(stores.filter(s => s.hang === hang).map(s => s.phumipak))].sort()
+    return [...new Set(activeStores.filter(s => s.hang === hang).map(s => s.phumipak))].sort()
   }, [stores])
 
-  // Get branches for hang + region
+  // Get branches for hang + region (only active stores)
   const branchesForHangRegion = useCallback((hang, phumipak) => {
-    return stores.filter(s => s.hang === hang && s.phumipak === phumipak)
+    return activeStores.filter(s => s.hang === hang && s.phumipak === phumipak)
   }, [stores])
 
   const refreshFromApi = useCallback(async () => {
@@ -54,7 +58,7 @@ export function DataProvider({ children }) {
         fetch('/api/models').then(r => r.json()),
         fetch('/api/locations').then(r => r.json()),
       ])
-      if (sr.status === 'fulfilled' && Array.isArray(sr.value)) setStores(sr.value)
+      if (sr.status === 'fulfilled' && Array.isArray(sr.value)) setStores(sr.value.map(s => ({ ...s, status: s.status || 'active' })))
       if (mr.status === 'fulfilled' && Array.isArray(mr.value)) setModels(mr.value)
       if (lr.status === 'fulfilled' && Array.isArray(lr.value)) setLocations(lr.value)
     } catch {}

@@ -7,7 +7,8 @@ CREATE TABLE IF NOT EXISTS stores (
   phumipak   TEXT NOT NULL,
   changwat   TEXT,
   sakha      TEXT,
-  store_name TEXT
+  store_name TEXT,
+  status     TEXT DEFAULT 'active'
 );
 
 CREATE TABLE IF NOT EXISTS models (

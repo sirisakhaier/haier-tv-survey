@@ -281,7 +281,7 @@ app.get('/api/admin/export', (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }) }
 })
 
-// Dimension import
+// Dimension import (replaces whole catalog)
 app.post('/api/admin/import/:type', (req, res) => {
   const { type } = req.params
   const { rows } = req.body
@@ -291,15 +291,18 @@ app.post('/api/admin/import/:type', (req, res) => {
     let imported = 0
     const tx = db.transaction(() => {
       if (type === 'store') {
-        const stmt = db.prepare('INSERT OR REPLACE INTO stores (store_id,hang,phumipak,changwat,sakha,store_name) VALUES (?,?,?,?,?,?)')
+        db.prepare('DELETE FROM stores').run()
+        const stmt = db.prepare('INSERT INTO stores (store_id,hang,phumipak,changwat,sakha,store_name,status) VALUES (?,?,?,?,?,?,?)')
         for (const r of rows) {
           const id = r['Store ID(Primary key)'] || r['Store ID (Primary key)'] || r['store_id']
           if (!id) continue
-          stmt.run(id, r['ห้าง']||r.hang, r['ภูมิภาค']||r.phumipak, r['จังหวัด']||r.changwat, r['สาขา']||r.sakha, r['Store Name']||r.store_name)
+          const status = r.status || r['สถานะ'] || 'active'
+          stmt.run(id, r['ห้าง']||r.hang, r['ภูมิภาค']||r.phumipak, r['จังหวัด']||r.changwat, r['สาขา']||r.sakha, r['Store Name']||r.store_name, status)
           imported++
         }
       } else if (type === 'model') {
-        const stmt = db.prepare('INSERT OR REPLACE INTO models (model_code,category,sub_category,size) VALUES (?,?,?,?)')
+        db.prepare('DELETE FROM models').run()
+        const stmt = db.prepare('INSERT INTO models (model_code,category,sub_category,size) VALUES (?,?,?,?)')
         for (const r of rows) {
           const code = r['Model (Primary key)'] || r['model_code']
           if (!code) continue
@@ -307,7 +310,8 @@ app.post('/api/admin/import/:type', (req, res) => {
           imported++
         }
       } else if (type === 'location') {
-        const stmt = db.prepare('INSERT OR REPLACE INTO location_types (code,label_th,label_en) VALUES (?,?,?)')
+        db.prepare('DELETE FROM location_types').run()
+        const stmt = db.prepare('INSERT INTO location_types (code,label_th,label_en) VALUES (?,?,?)')
         for (const r of rows) {
           stmt.run(r.code||r.Code, r.label_th||r.LabelTH, r.label_en||r.LabelEN)
           imported++
@@ -327,6 +331,17 @@ app.delete('/api/admin/dimension/:type/:pk', (req, res) => {
   try {
     db.prepare(`DELETE FROM ${table} WHERE ${col}=?`).run(pk)
     res.json({ ok: true })
+  } catch (err) { res.status(500).json({ error: err.message }) }
+})
+
+// Store status toggle
+app.post('/api/admin/dimension/store/status', (req, res) => {
+  const { store_id, status } = req.body
+  if (!store_id || !status) return res.status(400).json({ error: 'Missing fields' })
+  const newStatus = status === 'inactive' ? 'inactive' : 'active'
+  try {
+    db.prepare('UPDATE stores SET status=? WHERE store_id=?').run(newStatus, store_id)
+    res.json({ ok: true, store_id, status: newStatus })
   } catch (err) { res.status(500).json({ error: err.message }) }
 })
 
