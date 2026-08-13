@@ -1,5 +1,6 @@
-// functions/photos/[...path].js
+// functions/photos/[[path]].js
 // Serves photos stored in Cloudflare R2 bucket (env.PHOTOS) under /photos/*
+// Automatically handles extension fallbacks (.jpg, .webp, .png, .jpeg)
 
 export async function onRequest({ request, params, env }) {
   if (request.method === 'OPTIONS') {
@@ -17,17 +18,30 @@ export async function onRequest({ request, params, env }) {
   }
 
   try {
-    // params.path is an array of path segments after /photos/
-    const key = Array.isArray(params.path) ? params.path.join('/') : (params.path || '')
+    const rawKey = Array.isArray(params.path) ? params.path.join('/') : (params.path || '')
     
-    if (!key) {
+    if (!rawKey) {
       return new Response('Key required', { status: 400 })
     }
 
-    const object = await env.PHOTOS.get(key)
+    // 1. Try exact key match first
+    let object = await env.PHOTOS.get(rawKey)
+
+    // 2. If not found, try fallback extensions (.webp, .png, .jpg, .jpeg)
+    if (!object) {
+      const baseKey = rawKey.replace(/\.(jpg|jpeg|png|webp)$/i, '')
+      const candidateExts = ['.jpg', '.webp', '.png', '.jpeg']
+      for (const ext of candidateExts) {
+        const altKey = baseKey + ext
+        if (altKey !== rawKey) {
+          object = await env.PHOTOS.get(altKey)
+          if (object) break
+        }
+      }
+    }
 
     if (!object) {
-      return new Response('Photo not found: ' + key, { status: 404 })
+      return new Response('Photo not found: ' + rawKey, { status: 404 })
     }
 
     const headers = new Headers()
@@ -36,9 +50,9 @@ export async function onRequest({ request, params, env }) {
     headers.set('Cache-Control', 'public, max-age=31536000, immutable')
     headers.set('Access-Control-Allow-Origin', '*')
 
-    // Determine content type if not set
+    // Ensure content type header is set
     if (!headers.get('content-type')) {
-      const ext = key.split('.').pop().toLowerCase()
+      const ext = rawKey.split('.').pop().toLowerCase()
       if (ext === 'png') headers.set('content-type', 'image/png')
       else if (ext === 'webp') headers.set('content-type', 'image/webp')
       else headers.set('content-type', 'image/jpeg')

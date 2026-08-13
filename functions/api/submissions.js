@@ -55,8 +55,7 @@ async function handlePost({ request, env }) {
     const photoBatch = []
     for (let i = 0; i < photoFiles.length; i++) {
       const file = photoFiles[i]
-      const ext  = file.name?.split('.').pop() || 'jpg'
-      const key  = `submissions/${submissionId}/${Date.now()}_${i}.${ext}`
+      const key  = `submissions/${submissionId}/${Date.now()}_${i}.jpg`
       await env.PHOTOS.put(key, file.stream(), { httpMetadata: { contentType: file.type || 'image/jpeg' } })
       const url = `/photos/${key}`
       photoBatch.push(photoStmt.bind(submissionId, url))
