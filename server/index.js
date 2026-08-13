@@ -129,7 +129,11 @@ app.get('/api/locations', (req, res) => {
 
 // Submit survey
 app.post('/api/submissions', upload.array('photos', 10), (req, res) => {
-  const { store_id, respondent_name, phone, entries } = req.body
+  const store_id = req.body.store_id || req.body.storeId
+  const respondent_name = req.body.respondent_name || req.body.respondentName
+  const phone = req.body.phone
+  const entries = req.body.entries
+
   if (!store_id || !respondent_name || !phone) {
     return res.status(400).json({ error: 'Missing required fields' })
   }

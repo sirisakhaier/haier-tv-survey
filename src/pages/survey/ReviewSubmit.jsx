@@ -12,13 +12,14 @@ export default function ReviewSubmit() {
   const handleSubmit = async () => {
     setSubmitting(true)
     try {
-      const formData = new FormData()
+      formData.append('store_id',       survey.storeId)
       formData.append('storeId',        survey.storeId)
       formData.append('storeName',      survey.storeName || survey.sakha)
       formData.append('hang',           survey.hang)
       formData.append('phumipak',       survey.phumipak)
       formData.append('changwat',       survey.changwat || '')
       formData.append('sakha',          survey.sakha)
+      formData.append('respondent_name', survey.respondentName)
       formData.append('respondentName', survey.respondentName)
       formData.append('phone',          survey.phone)
 

@@ -19,8 +19,8 @@ export async function onRequest({ request, env }) {
 async function handlePost({ request, env }) {
   try {
     const formData = await request.formData()
-    const store_id       = formData.get('store_id')
-    const respondent_name = formData.get('respondent_name')
+    const store_id       = formData.get('store_id') || formData.get('storeId')
+    const respondent_name = formData.get('respondent_name') || formData.get('respondentName')
     const phone          = formData.get('phone')
     const entriesRaw     = formData.get('entries')
     const photoFiles     = formData.getAll('photos')
