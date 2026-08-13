@@ -32,7 +32,7 @@ export default function AdminLogin() {
           navigate('/admin', { replace: true })
         }
       } else {
-        toast.error(`รหัสผ่านไม่ถูกต้อง (${targetRole === 'viewer' ? 'Viewer default: viewer1234' : 'Admin default: admin1234'})`)
+        toast.error('รหัสผ่านไม่ถูกต้อง')
       }
     } catch {
       toast.error('เกิดข้อผิดพลาดในการเข้าสู่ระบบ')
@@ -102,7 +102,7 @@ export default function AdminLogin() {
               className="form-input"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              placeholder={targetRole === 'viewer' ? 'viewer1234' : 'admin1234'}
+              placeholder="••••••••"
               autoFocus
               autoComplete="current-password"
             />
@@ -122,11 +122,7 @@ export default function AdminLogin() {
           </button>
         </form>
 
-        <div style={{ marginTop: 18, padding: '10px 12px', background: 'var(--haier-blue-pale)', borderRadius: 8, fontSize: '0.75rem', color: 'var(--text-secondary)', textAlign: 'center' }}>
-          💡 รหัสผ่านเริ่มต้น: <strong>{targetRole === 'viewer' ? 'viewer1234 (เข้าดูรายงาน)' : 'admin1234 (จัดการระบบ)'}</strong>
-        </div>
-
-        <div style={{ textAlign: 'center', marginTop: 16 }}>
+        <div style={{ textAlign: 'center', marginTop: 20 }}>
           <a href="/" style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>← กลับหน้าสำรวจ</a>
         </div>
       </div>
