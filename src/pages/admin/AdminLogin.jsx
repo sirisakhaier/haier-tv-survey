@@ -37,8 +37,8 @@ export default function AdminLogin() {
     <div className="login-page">
       <div className="login-card">
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <div style={{ background: 'var(--haier-blue)', borderRadius: 12, padding: '12px 20px', display: 'inline-block', marginBottom: 12 }}>
-            <img src="/haier-logo.png" alt="Haier" style={{ height: 36, filter: 'brightness(0) invert(1)' }} />
+          <div style={{ display: 'inline-block', marginBottom: 12 }}>
+            <img src="/haier-logo.png" alt="Haier" style={{ height: 52, width: 52, borderRadius: 10, border: '2px solid var(--border-blue)' }} />
           </div>
           <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Haier Electrical Appliances (Thailand) Co., Ltd.</div>
           <div style={{ fontSize: '0.75rem', color: 'var(--haier-blue)', fontWeight: 700, marginTop: 2, marginBottom: 8 }}>Sell out team</div>

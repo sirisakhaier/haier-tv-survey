@@ -24,7 +24,20 @@ export default function SurveyDataManager() {
     }
   }
 
-  // 1. Export Without Pictures (CSV - URL Only)
+  // Format URL to ensure 1 URL per photo and ends with .jpg
+  const formatJpgUrl = (p, origin) => {
+    if (!p) return ''
+    let url = p.trim()
+    if (!url.startsWith('http')) url = origin + url
+    if (!/\.(jpg|jpeg|png|webp)$/i.test(url)) {
+      url = url + '.jpg'
+    } else {
+      url = url.replace(/\.(jpeg|png|webp)$/i, '.jpg')
+    }
+    return url
+  }
+
+  // 1. Export Without Pictures (CSV - 1 JPG URL per photo column)
   const handleExportWithoutPictures = async () => {
     setExportingCSV(true)
     try {
@@ -32,12 +45,26 @@ export default function SurveyDataManager() {
       const data = await res.json()
       const origin = window.location.origin
 
-      const rows = (data || []).map(r => {
-        const photoUrls = r.photo_urls
-          ? r.photo_urls.split(', ').map(p => p.startsWith('http') ? p : origin + p).join('\n')
-          : ''
+      if (!data || data.length === 0) {
+        toast.error('ไม่มีข้อมูลสำหรับส่งออก')
+        setExportingCSV(false)
+        return
+      }
 
-        return {
+      // Determine maximum number of photos across all submissions
+      let maxPhotos = 3
+      data.forEach(r => {
+        if (r.photo_urls) {
+          const count = r.photo_urls.split(', ').filter(Boolean).length
+          if (count > maxPhotos) maxPhotos = count
+        }
+      })
+
+      const rows = data.map(r => {
+        const rawUrls = r.photo_urls ? r.photo_urls.split(', ').filter(Boolean) : []
+        const jpgUrls = rawUrls.map(p => formatJpgUrl(p, origin))
+
+        const rowObj = {
           'Submission ID': r.id,
           'Store ID': r.store_id,
           'ห้าง': r.hang,
@@ -53,8 +80,14 @@ export default function SurveyDataManager() {
           'Location TH': r.location_label_th,
           'Location EN': r.location_label_en,
           'วันที่ส่ง': r.submitted_at ? new Date(r.submitted_at).toLocaleString('th-TH') : '',
-          'Photo URLs (ลิงก์รูปภาพ)': photoUrls,
         }
+
+        // Add 1 JPG URL per photo column
+        for (let i = 1; i <= maxPhotos; i++) {
+          rowObj[`Photo ${i} URL (.jpg)`] = jpgUrls[i - 1] || ''
+        }
+
+        return rowObj
       })
 
       const csv = Papa.unparse(rows)
@@ -62,10 +95,10 @@ export default function SurveyDataManager() {
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `haier_survey_url_only_${new Date().toISOString().slice(0,10)}.csv`
+      a.download = `haier_survey_jpg_urls_${new Date().toISOString().slice(0,10)}.csv`
       a.click()
       URL.revokeObjectURL(url)
-      toast.success('ส่งออก CSV (ไม่มีรูปภาพ) สำเร็จ')
+      toast.success('ส่งออก CSV (1 JPG URL ต่อรูป) สำเร็จ')
     } catch (err) {
       toast.error('ส่งออก CSV ล้มเหลว: ' + err.message)
     } finally {
@@ -80,14 +113,13 @@ export default function SurveyDataManager() {
       if (!res.ok) return null
       const blob = await res.blob()
       const arrayBuffer = await blob.arrayBuffer()
-      const type = blob.type.includes('png') ? 'png' : 'jpeg'
-      return { buffer: new Uint8Array(arrayBuffer), type }
+      return { buffer: new Uint8Array(arrayBuffer), type: 'jpeg' }
     } catch {
       return null
     }
   }
 
-  // 2. Export With Pictures (Excel .xlsx with embedded thumbnails & URLs)
+  // 2. Export With Pictures (Excel .xlsx with 1 JPG URL + Embedded Thumbnail per photo)
   const handleExportWithPictures = async () => {
     setExportingExcel(true)
     setExportProgress('กำลังเตรียมข้อมูล...')
@@ -104,6 +136,15 @@ export default function SurveyDataManager() {
 
       const workbook = new ExcelJS.Workbook()
       const worksheet = workbook.addWorksheet('Survey Data with Photos')
+
+      // Determine maximum number of photos per submission
+      let maxPhotos = 3
+      data.forEach(r => {
+        if (r.photo_urls) {
+          const count = r.photo_urls.split(', ').filter(Boolean).length
+          if (count > maxPhotos) maxPhotos = count
+        }
+      })
 
       // Columns setup
       const baseCols = [
@@ -122,21 +163,12 @@ export default function SurveyDataManager() {
         { header: 'Location TH', key: 'location_label_th', width: 14 },
         { header: 'Location EN', key: 'location_label_en', width: 14 },
         { header: 'วันที่ส่ง', key: 'submitted_at', width: 20 },
-        { header: 'Photo URLs (ลิงก์)', key: 'photo_urls', width: 35 },
       ]
 
-      // Determine maximum number of photos per submission
-      let maxPhotos = 3
-      data.forEach(r => {
-        if (r.photo_urls) {
-          const count = r.photo_urls.split(', ').length
-          if (count > maxPhotos) maxPhotos = count
-        }
-      })
-
-      // Add thumbnail columns
+      // Add Photo URL and Photo Thumbnail columns for each picture (1 URL per photo)
       for (let i = 1; i <= maxPhotos; i++) {
-        baseCols.push({ header: `Photo ${i} (พรีวิว)`, key: `thumb_${i}`, width: 16 })
+        baseCols.push({ header: `Photo ${i} URL (.jpg)`, key: `photo_${i}_url`, width: 35 })
+        baseCols.push({ header: `Photo ${i} Preview`, key: `photo_${i}_thumb`, width: 16 })
       }
 
       worksheet.columns = baseCols
@@ -154,10 +186,10 @@ export default function SurveyDataManager() {
       let total = data.length
       for (let idx = 0; idx < data.length; idx++) {
         const r = data[idx]
-        setExportProgress(`กำลังโหลดรูปภาพและสร้าง Excel (${idx + 1}/${total})...`)
+        setExportProgress(`กำลังดาวน์โหลดรูปภาพและสร้าง Excel (${idx + 1}/${total})...`)
 
-        const rawUrls = r.photo_urls ? r.photo_urls.split(', ') : []
-        const fullUrls = rawUrls.map(p => p.startsWith('http') ? p : origin + p)
+        const rawUrls = r.photo_urls ? r.photo_urls.split(', ').filter(Boolean) : []
+        const jpgUrls = rawUrls.map(p => formatJpgUrl(p, origin))
 
         const rowValues = {
           id: r.id,
@@ -175,28 +207,35 @@ export default function SurveyDataManager() {
           location_label_th: r.location_label_th,
           location_label_en: r.location_label_en,
           submitted_at: r.submitted_at ? new Date(r.submitted_at).toLocaleString('th-TH') : '',
-          photo_urls: fullUrls.join('\n'),
+        }
+
+        // Add individual photo URLs
+        for (let i = 1; i <= maxPhotos; i++) {
+          rowValues[`photo_${i}_url`] = jpgUrls[i - 1] || ''
         }
 
         const addedRow = worksheet.addRow(rowValues)
-        addedRow.height = 65 // height for thumbnail
+        addedRow.height = 65 // height for embedded thumbnail
         addedRow.eachCell(cell => {
           cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true }
         })
 
         const rowIndex = addedRow.number // 1-indexed
 
-        // Fetch and embed photo thumbnails
-        for (let pIdx = 0; pIdx < fullUrls.length; pIdx++) {
-          const imgUrl = fullUrls[pIdx]
+        // Fetch and embed photo thumbnails into corresponding Photo i Preview columns
+        for (let pIdx = 0; pIdx < jpgUrls.length; pIdx++) {
+          const imgUrl = jpgUrls[pIdx]
           const imgData = await fetchImageBuffer(imgUrl)
           if (imgData) {
             try {
               const imageId = workbook.addImage({
                 buffer: imgData.buffer,
-                extension: imgData.type,
+                extension: 'jpeg',
               })
-              const colIndex = 16 + pIdx // 0-indexed column (col 16 = 17th column = Photo 1)
+              // Column 0-indexed: base 15 cols, then for each photo: 2 cols (URL, Preview)
+              // Photo 1 Preview -> col 16 (0-indexed)
+              // Photo 2 Preview -> col 18 (0-indexed)
+              const colIndex = 15 + (pIdx * 2) + 1 // Preview column index
               worksheet.addImage(imageId, {
                 tl: { col: colIndex, row: rowIndex - 1 },
                 ext: { width: 75, height: 60 },
@@ -218,7 +257,7 @@ export default function SurveyDataManager() {
       a.download = `haier_survey_with_pictures_${new Date().toISOString().slice(0,10)}.xlsx`
       a.click()
       URL.revokeObjectURL(url)
-      toast.success('ส่งออก Excel (มีรูปภาพพรีวิว) สำเร็จ!')
+      toast.success('ส่งออก Excel (พร้อม 1 JPG URL ต่อรูป + พรีวิว) สำเร็จ!')
     } catch (err) {
       toast.error('ส่งออก Excel ล้มเหลว: ' + err.message)
     } finally {
@@ -251,7 +290,7 @@ export default function SurveyDataManager() {
       <div style={{ marginBottom: 20 }}>
         <h1 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Survey Data Export & Management</h1>
         <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-          ส่งออกข้อมูลแบบสำรวจทีวี Haier (แยกแบบมีรูปภาพและไม่มีรูปภาพ)
+          ส่งออกข้อมูลแบบสำรวจทีวี Haier (แยกแบบมีรูปภาพและไม่มีรูปภาพ — 1 ลิงก์ .jpg ต่อรูป)
         </p>
       </div>
 
@@ -266,14 +305,14 @@ export default function SurveyDataManager() {
           {/* Export Buttons */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 14 }}>
 
-            {/* 1. Export Without Pictures (URL Only) */}
-            <div style={{ background: '#F7FAFC', border: '1px solid var(--border-light)', borderRadius: 'var(--radius-md)', padding: 16, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 12 }}>
+            {/* 1. Export Without Pictures (1 JPG URL per column) */}
+            <div style={{ background: '#F7FAFC', border: '1px solid var(--border-light)', borderRadius: 'var(--radius-md)', padding: 16, display: 'flex', flexDirection: 'column', justify: 'space-between', gap: 12 }}>
               <div>
                 <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  📄 1. ส่งออก CSV (ไม่มีรูปภาพ - มีเฉพาะลิงก์)
+                  📄 1. ส่งออก CSV (ไม่มีรูปภาพ - 1 ลิงก์ .jpg ต่อคอลัมน์)
                 </div>
                 <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: 4 }}>
-                  ดาวน์โหลดไฟล์ CSV รวดเร็ว มีเฉพาะ URL ลิงก์รูปภาพ สำหรับใช้วิเคราะห์ข้อมูล
+                  ดาวน์โหลด CSV รวดเร็ว แยกคอลัมน์ Photo 1 URL, Photo 2 URL... (มีเฉพาะลิงก์ .jpg 1 ลิงก์ต่อช่อง)
                 </div>
               </div>
               <button
@@ -285,14 +324,14 @@ export default function SurveyDataManager() {
               </button>
             </div>
 
-            {/* 2. Export With Pictures (Excel with Thumbnails & URLs) */}
-            <div style={{ background: 'var(--haier-blue-pale)', border: '1px solid var(--border-blue)', borderRadius: 'var(--radius-md)', padding: 16, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 12 }}>
+            {/* 2. Export With Pictures (Excel with Thumbnails & JPG URLs) */}
+            <div style={{ background: 'var(--haier-blue-pale)', border: '1px solid var(--border-blue)', borderRadius: 'var(--radius-md)', padding: 16, display: 'flex', flexDirection: 'column', justify: 'space-between', gap: 12 }}>
               <div>
                 <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--haier-blue)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  🖼️ 2. ส่งออก Excel (มีรูปภาพพรีวิว + ลิงก์)
+                  🖼️ 2. ส่งออก Excel (มีรูปภาพพรีวิว + ลิงก์ .jpg)
                 </div>
                 <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: 4 }}>
-                  ดาวน์โหลดไฟล์ Excel (.xlsx) ที่มีรูปภาพ Thumbnail ฝังอยู่ในตาราง พร้อมลิงก์รูปภาพ
+                  ดาวน์โหลด Excel (.xlsx) แยกคอลัมน์ Photo 1 URL (.jpg) คู่กับรูปภาพ Thumbnail พรีวิวฝังในตาราง
                 </div>
               </div>
               <button

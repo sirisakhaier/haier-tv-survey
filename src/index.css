@@ -191,8 +191,9 @@ h1, h2, h3, h4 { line-height: 1.3; font-weight: 700; }
   display: flex; align-items: center; gap: 16px;
 }
 .page-header__logo {
-  height: 44px; width: auto; object-fit: contain;
-  filter: brightness(0) invert(1);
+  height: 48px; width: 48px; object-fit: cover;
+  border-radius: var(--radius-sm); border: 2px solid rgba(255,255,255,0.3);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 
 /* ─── Survey Page Layout ─────────────────────────────────── */
@@ -284,7 +285,7 @@ h1, h2, h3, h4 { line-height: 1.3; font-weight: 700; }
   display: flex; align-items: center; gap: 12px;
 }
 .admin-sidebar__logo img {
-  height: 36px; filter: brightness(0) invert(1);
+  height: 38px; width: 38px; object-fit: cover; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.2);
 }
 .admin-nav { flex: 1; padding: 16px 12px; display: flex; flex-direction: column; gap: 4px; }
 .admin-nav__item {
@@ -393,7 +394,7 @@ h1, h2, h3, h4 { line-height: 1.3; font-weight: 700; }
   content: ''; position: absolute; inset: 0;
   background: radial-gradient(ellipse at 80% 20%, rgba(255,255,255,0.07) 0%, transparent 55%);
 }
-.landing-hero__logo { height: 56px; margin: 0 auto 16px; filter: brightness(0) invert(1); }
+.landing-hero__logo { height: 68px; width: 68px; margin: 0 auto 16px; object-fit: cover; border-radius: var(--radius-md); border: 2px solid rgba(255,255,255,0.4); box-shadow: 0 4px 16px rgba(0,0,0,0.2); }
 .landing-hero__title { font-size: 1.6rem; font-weight: 800; margin-bottom: 6px; }
 .landing-hero__company { font-size: 0.85rem; font-weight: 600; opacity: 0.95; letter-spacing: 0.02em; margin-bottom: 4px; }
 .landing-hero__team { display: inline-block; background: rgba(255,255,255,0.18); color: #fff; padding: 4px 14px; border-radius: var(--radius-full); font-size: 0.78rem; font-weight: 700; margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.3); }
