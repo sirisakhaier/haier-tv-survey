@@ -11,6 +11,11 @@ CREATE TABLE IF NOT EXISTS stores (
   status     TEXT DEFAULT 'active'
 );
 
+CREATE TABLE IF NOT EXISTS chain_statuses (
+  hang   TEXT PRIMARY KEY,
+  status TEXT DEFAULT 'active'
+);
+
 CREATE TABLE IF NOT EXISTS models (
   model_code   TEXT PRIMARY KEY,
   category     TEXT,

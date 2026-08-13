@@ -334,14 +334,26 @@ app.delete('/api/admin/dimension/:type/:pk', (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }) }
 })
 
-// Store status toggle
-app.post('/api/admin/dimension/store/status', (req, res) => {
-  const { store_id, status } = req.body
-  if (!store_id || !status) return res.status(400).json({ error: 'Missing fields' })
+// Chain statuses
+app.get('/api/chains', (req, res) => {
+  try {
+    const hangs = db.prepare('SELECT DISTINCT hang FROM stores ORDER BY hang').all()
+    const statuses = db.prepare('SELECT hang, status FROM chain_statuses').all()
+    const map = new Map()
+    for (const s of statuses) map.set(s.hang, s.status)
+    const list = hangs.map(h => ({ hang: h.hang, status: map.get(h.hang) || 'active' }))
+    res.json(list)
+  } catch (err) { res.status(500).json({ error: err.message }) }
+})
+
+// Chain status toggle
+app.post('/api/admin/dimension/chain/status', (req, res) => {
+  const { hang, status } = req.body
+  if (!hang || !status) return res.status(400).json({ error: 'Missing fields' })
   const newStatus = status === 'inactive' ? 'inactive' : 'active'
   try {
-    db.prepare('UPDATE stores SET status=? WHERE store_id=?').run(newStatus, store_id)
-    res.json({ ok: true, store_id, status: newStatus })
+    db.prepare('INSERT OR REPLACE INTO chain_statuses (hang, status) VALUES (?, ?)').run(hang, newStatus)
+    res.json({ ok: true, hang, status: newStatus })
   } catch (err) { res.status(500).json({ error: err.message }) }
 })
 
