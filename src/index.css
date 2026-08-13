@@ -401,7 +401,14 @@ h1, h2, h3, h4 { line-height: 1.3; font-weight: 700; }
 .landing-hero__subtitle { font-size: 0.95rem; opacity: 0.85; max-width: 400px; margin: 0 auto; }
 .landing-samples { padding: 28px 16px; }
 .sample-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-.sample-card { border-radius: var(--radius-md); overflow: hidden; box-shadow: var(--shadow-md); background: #fff; display: flex; flex-direction: column; border: 1px solid var(--border-light); }
+.sample-card {
+  border-radius: var(--radius-md); overflow: hidden; box-shadow: var(--shadow-md);
+  background: #fff; display: flex; flex-direction: column; border: 1px solid var(--border-light);
+  cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; position: relative;
+}
+.sample-card:hover {
+  transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: var(--border-blue);
+}
 .sample-card img { width: 100%; height: 180px; object-fit: contain; background: #F8FAFC; padding: 6px; }
 .sample-card__label { padding: 10px 4px; text-align: center; background: #fff; border-top: 1px solid var(--border-light); }
 .sample-card__label strong { display: block; font-size: 0.85rem; color: var(--text-primary); }
