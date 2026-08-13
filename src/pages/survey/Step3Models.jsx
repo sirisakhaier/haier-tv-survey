@@ -22,7 +22,6 @@ export default function Step3Models() {
   const modelOptions = models.map(m => ({
     value: m.model_code,
     label: `${m.model_code} — ${m.sub_category} — ${m.size}`,
-    sublabel: m.sub_category,
   }))
 
   const handleAdd = () => {
