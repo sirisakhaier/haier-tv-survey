@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.DS_Store
+server/survey.db
+server/survey.db-shm
+server/survey.db-wal
+uploads/
+*.log
+.env
+.dev.vars

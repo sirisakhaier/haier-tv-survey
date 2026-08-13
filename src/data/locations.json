@@ -1,0 +1,17 @@
+[
+  {
+    "code": "wall",
+    "label_th": "ผนัง",
+    "label_en": "Wall"
+  },
+  {
+    "code": "table",
+    "label_th": "โต๊ะ",
+    "label_en": "Table"
+  },
+  {
+    "code": "pillar",
+    "label_th": "เสา",
+    "label_en": "Pillar"
+  }
+]

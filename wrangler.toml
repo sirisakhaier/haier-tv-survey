@@ -1,0 +1,27 @@
+name = "haier-tv-survey"
+compatibility_date = "2024-09-23"
+pages_build_output_dir = "dist"
+
+# ─── D1 Database ─────────────────────────────────────────
+[[d1_databases]]
+binding = "DB"
+database_name = "haier_survey_db"
+database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+
+# ─── R2 Bucket ───────────────────────────────────────────
+[[r2_buckets]]
+binding = "PHOTOS"
+bucket_name = "haier-survey-photos"
+
+# ─── Production environment ───────────────────────────────
+[env.production]
+name = "haier-tv-survey"
+
+# ─── Preview environment ──────────────────────────────────
+[env.preview]
+name = "haier-tv-survey-preview"
+
+# ─── Secrets (set via wrangler CLI, never commit values) ──
+# npx wrangler secret put ADMIN_PASSWORD
+# Local dev: create .dev.vars file (gitignored):
+#   ADMIN_PASSWORD=admin1234
