@@ -24,13 +24,25 @@ export default function AdminDashboard() {
     setLoading(true)
     try {
       const [sr, rr] = await Promise.all([
-        fetch('/api/admin/stats').then(r => r.json()),
-        fetch('/api/admin/recent').then(r => r.json()),
+        fetch('/api/admin/stats').then(r => r.ok ? r.json() : null).catch(() => null),
+        fetch('/api/admin/recent').then(r => r.ok ? r.json() : []).catch(() => []),
       ])
-      setStats(sr)
-      setRecent(rr)
+      setStats(sr && !sr.error ? sr : {
+        totalSubmissions: 0,
+        uniqueStores: 0,
+        totalPhotos: 0,
+        totalItems: 0,
+        today: 0,
+        thisWeek: 0,
+        byHang: [],
+        byRegion: [],
+        byModel: [],
+        bySubCat: [],
+        byLocation: [],
+        trend: [],
+      })
+      setRecent(Array.isArray(rr) ? rr : [])
     } catch {
-      // Demo data when backend not available
       setStats({
         totalSubmissions: 0,
         uniqueStores: 0,

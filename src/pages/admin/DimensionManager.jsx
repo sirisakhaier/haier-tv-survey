@@ -20,7 +20,8 @@ export default function DimensionManager() {
   const [editRow, setEditRow] = useState(null)
   const fileRef = useRef(null)
 
-  const data = activeTab === 'store' ? stores : activeTab === 'model' ? models : locations
+  const rawData = activeTab === 'store' ? stores : activeTab === 'model' ? models : locations
+  const data = Array.isArray(rawData) ? rawData : []
 
   const filtered = data.filter(r => {
     if (!search.trim()) return true

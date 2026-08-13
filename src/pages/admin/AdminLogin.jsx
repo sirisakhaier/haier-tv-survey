@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, Navigate } from 'react-router-dom'
 import { useAdminAuth } from '../../context/AdminAuthContext'
 import toast from 'react-hot-toast'
 
@@ -9,18 +9,27 @@ export default function AdminLogin() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
 
-  if (isAuthenticated) { navigate('/admin', { replace: true }); return null }
+  // If already logged in, redirect declaratively
+  if (isAuthenticated) {
+    return <Navigate to="/admin" replace />
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (!password) return
     setLoading(true)
-    const ok = await login(password)
-    setLoading(false)
-    if (ok) {
-      toast.success('เข้าสู่ระบบสำเร็จ')
-      navigate('/admin', { replace: true })
-    } else {
-      toast.error('รหัสผ่านไม่ถูกต้อง')
+    try {
+      const ok = await login(password)
+      if (ok) {
+        toast.success('เข้าสู่ระบบสำเร็จ')
+        navigate('/admin', { replace: true })
+      } else {
+        toast.error('รหัสผ่านไม่ถูกต้อง (Default: admin1234)')
+      }
+    } catch (err) {
+      toast.error('เกิดข้อผิดพลาดในการเข้าสู่ระบบ')
+    } finally {
+      setLoading(false)
     }
   }
 
