@@ -4,6 +4,7 @@ import ThemeToggle from '../../components/ThemeToggle'
 
 const NAV_ITEMS = [
   { to: '/admin',            icon: '📊', label: 'Dashboard' },
+  { to: '/admin/report',     icon: '📈', label: 'Report' },
   { to: '/admin/dimensions', icon: '📋', label: 'Dimensions' },
   { to: '/admin/data',       icon: '🗂️', label: 'Survey Data' },
 ]

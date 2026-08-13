@@ -15,6 +15,7 @@ import SuccessPage from './pages/SuccessPage'
 
 import AdminLogin from './pages/admin/AdminLogin'
 import AdminDashboard from './pages/admin/AdminDashboard'
+import StoreReport from './pages/admin/StoreReport'
 import DimensionManager from './pages/admin/DimensionManager'
 import SurveyDataManager from './pages/admin/SurveyDataManager'
 import AdminLayout from './pages/admin/AdminLayout'
@@ -90,6 +91,7 @@ export default function App() {
                 <Route path="/admin/login" element={<AdminLogin />} />
                 <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
                   <Route index element={<AdminDashboard />} />
+                  <Route path="report" element={<StoreReport />} />
                   <Route path="dimensions" element={<DimensionManager />} />
                   <Route path="data" element={<SurveyDataManager />} />
                 </Route>

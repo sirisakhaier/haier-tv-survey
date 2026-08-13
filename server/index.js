@@ -237,15 +237,32 @@ app.get('/api/admin/recent', (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }) }
 })
 
-app.get('/api/admin/submissions', (req, res) => {
+app.get('/api/admin/store-report', (req, res) => {
   try {
     const rows = db.prepare(`
-      SELECT ss.id, ss.store_id, ss.respondent_name, ss.phone, ss.submitted_at,
-        s.hang, s.phumipak, s.changwat, s.sakha,
-        (SELECT COUNT(*) FROM submission_items si WHERE si.submission_id=ss.id) as items_count,
-        (SELECT COUNT(*) FROM submission_photos sp WHERE sp.submission_id=ss.id) as photos_count
-      FROM survey_submissions ss LEFT JOIN stores s ON s.store_id=ss.store_id
-      ORDER BY ss.submitted_at DESC
+      SELECT 
+        s.store_id,
+        s.hang,
+        s.phumipak,
+        s.changwat,
+        s.sakha,
+        s.store_name,
+        s.status as store_status,
+        COUNT(DISTINCT ss.id) as submission_count,
+        COUNT(si.id) as total_tvs_displayed,
+        (
+          SELECT ss_sub.respondent_name 
+          FROM survey_submissions ss_sub 
+          WHERE ss_sub.store_id = s.store_id 
+          ORDER BY ss_sub.submitted_at DESC 
+          LIMIT 1
+        ) as latest_respondent,
+        MAX(ss.submitted_at) as latest_submitted_at
+      FROM stores s
+      LEFT JOIN survey_submissions ss ON s.store_id = ss.store_id
+      LEFT JOIN submission_items si ON ss.id = si.submission_id
+      GROUP BY s.store_id
+      ORDER BY submission_count DESC, s.hang ASC, s.sakha ASC
     `).all()
     res.json(rows)
   } catch (err) { res.status(500).json({ error: err.message }) }
