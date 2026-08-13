@@ -41,8 +41,11 @@ export default function Step2Info() {
             ← ย้อนกลับ
           </button>
           <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 800, fontSize: '1.05rem' }}>Haier TV Survey</div>
-            <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>ขั้นตอนที่ 2 จาก 4 — ข้อมูลผู้กรอก</div>
+            <div style={{ fontSize: '0.75rem', opacity: 0.9, fontWeight: 500 }}>Haier Electrical Appliances (Thailand) Co., Ltd.</div>
+            <div style={{ fontWeight: 800, fontSize: '1.05rem', display: 'flex', alignItems: 'center', gap: 6 }}>
+              Haier TV Survey <span style={{ fontSize: '0.7rem', background: 'rgba(255,255,255,0.2)', padding: '2px 8px', borderRadius: 10 }}>Sell out team</span>
+            </div>
+            <div style={{ fontSize: '0.78rem', opacity: 0.8 }}>ขั้นตอนที่ 2 จาก 4 — ข้อมูลผู้กรอก</div>
           </div>
         </div>
         <StepIndicator current={2} />
@@ -51,8 +54,8 @@ export default function Step2Info() {
       <div className="survey-body">
         {/* Store summary */}
         <div style={{ background: 'var(--haier-blue-pale)', borderRadius: 'var(--radius-md)', padding: '12px 16px', fontSize: '0.875rem', color: 'var(--haier-blue)', fontWeight: 500 }}>
-          🏪 {survey.hang} · {survey.phumipak} · <strong>{survey.sakha}</strong>
-          <div style={{ fontSize: '0.75rem', opacity: 0.7 }}>{survey.storeId}</div>
+          🏪 {survey.hang} · {survey.phumipak} · <strong>{survey.sakha}</strong> {survey.storeName ? `(${survey.storeName})` : ''}
+          <div style={{ fontSize: '0.75rem', opacity: 0.75 }}>{survey.storeId} · {survey.changwat}</div>
         </div>
 
         <div className="card">
@@ -106,6 +109,11 @@ export default function Step2Info() {
         <button id="step2-next-btn" className="btn btn--primary btn--block" onClick={handleNext}>
           ถัดไป — เลือกรุ่นทีวี →
         </button>
+
+        {/* Footer info */}
+        <footer style={{ textAlign: 'center', marginTop: 16, fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+          Haier Electrical Appliances (Thailand) Co., Ltd. · Sell out team
+        </footer>
       </div>
     </div>
   )

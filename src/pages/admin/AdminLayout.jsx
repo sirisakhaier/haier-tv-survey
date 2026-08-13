@@ -20,9 +20,17 @@ export default function AdminLayout() {
     <div className="admin-layout">
       {/* Sidebar */}
       <aside className="admin-sidebar">
-        <div className="admin-sidebar__logo">
-          <img src="/haier-logo.png" alt="Haier" />
-          <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>TV Survey</span>
+        <div className="admin-sidebar__logo" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 4 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <img src="/haier-logo.png" alt="Haier" />
+            <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>TV Survey</span>
+          </div>
+          <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.2 }}>
+            Haier Electrical Appliances (Thailand) Co., Ltd.
+          </span>
+          <span style={{ fontSize: '0.65rem', color: '#90CDF4', fontWeight: 700 }}>
+            Sell out team
+          </span>
         </div>
         <nav className="admin-nav">
           {NAV_ITEMS.map(item => (

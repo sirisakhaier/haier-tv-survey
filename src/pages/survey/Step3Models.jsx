@@ -62,8 +62,11 @@ export default function Step3Models() {
             ← ย้อนกลับ
           </button>
           <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 800, fontSize: '1.05rem' }}>Haier TV Survey</div>
-            <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>ขั้นตอนที่ 3 จาก 4 — รุ่นทีวีและตำแหน่ง</div>
+            <div style={{ fontSize: '0.75rem', opacity: 0.9, fontWeight: 500 }}>Haier Electrical Appliances (Thailand) Co., Ltd.</div>
+            <div style={{ fontWeight: 800, fontSize: '1.05rem', display: 'flex', alignItems: 'center', gap: 6 }}>
+              Haier TV Survey <span style={{ fontSize: '0.7rem', background: 'rgba(255,255,255,0.2)', padding: '2px 8px', borderRadius: 10 }}>Sell out team</span>
+            </div>
+            <div style={{ fontSize: '0.78rem', opacity: 0.8 }}>ขั้นตอนที่ 3 จาก 4 — รุ่นทีวีและตำแหน่ง</div>
           </div>
         </div>
         <StepIndicator current={3} />
@@ -167,6 +170,11 @@ export default function Step3Models() {
         <button id="step3-next-btn" className="btn btn--primary btn--block" onClick={handleNext}>
           ถัดไป — อัพโหลดรูปภาพ →
         </button>
+
+        {/* Footer info */}
+        <footer style={{ textAlign: 'center', marginTop: 16, fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+          Haier Electrical Appliances (Thailand) Co., Ltd. · Sell out team
+        </footer>
       </div>
     </div>
   )

@@ -39,8 +39,11 @@ export default function ReviewSubmit() {
             ← ย้อนกลับ
           </button>
           <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 800, fontSize: '1.05rem' }}>ตรวจสอบข้อมูล</div>
-            <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>Review & Submit</div>
+            <div style={{ fontSize: '0.75rem', opacity: 0.9, fontWeight: 500 }}>Haier Electrical Appliances (Thailand) Co., Ltd.</div>
+            <div style={{ fontWeight: 800, fontSize: '1.05rem', display: 'flex', alignItems: 'center', gap: 6 }}>
+              ตรวจสอบข้อมูล <span style={{ fontSize: '0.7rem', background: 'rgba(255,255,255,0.2)', padding: '2px 8px', borderRadius: 10 }}>Sell out team</span>
+            </div>
+            <div style={{ fontSize: '0.78rem', opacity: 0.8 }}>Review & Submit</div>
           </div>
         </div>
       </header>
@@ -55,7 +58,7 @@ export default function ReviewSubmit() {
           <div className="review-section__body">
             <div className="review-row"><span className="review-row__label">ห้าง</span><span className="review-row__value">{survey.hang}</span></div>
             <div className="review-row"><span className="review-row__label">ภูมิภาค</span><span className="review-row__value">{survey.phumipak}</span></div>
-            <div className="review-row"><span className="review-row__label">สาขา</span><span className="review-row__value">{survey.sakha} ({survey.changwat})</span></div>
+            <div className="review-row"><span className="review-row__label">สาขา</span><span className="review-row__value">{survey.sakha} {survey.storeName ? `(${survey.storeName})` : ''} — {survey.changwat}</span></div>
             <div className="review-row"><span className="review-row__label">Store ID</span><span className="review-row__value" style={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>{survey.storeId}</span></div>
           </div>
         </div>
@@ -119,6 +122,11 @@ export default function ReviewSubmit() {
             ? <><div className="spinner" />กำลังส่งข้อมูล...</>
             : '✅ ส่งแบบสำรวจ (Submit)'}
         </button>
+
+        {/* Footer info */}
+        <footer style={{ textAlign: 'center', marginTop: 16, fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+          Haier Electrical Appliances (Thailand) Co., Ltd. · Sell out team
+        </footer>
       </div>
     </div>
   )

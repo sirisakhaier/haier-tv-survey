@@ -27,12 +27,13 @@ export default function AdminLogin() {
   return (
     <div className="login-page">
       <div className="login-card">
-        <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div style={{ background: 'var(--haier-blue)', borderRadius: 12, padding: '12px 20px', display: 'inline-block', marginBottom: 16 }}>
+        <div style={{ textAlign: 'center', marginBottom: 24 }}>
+          <div style={{ background: 'var(--haier-blue)', borderRadius: 12, padding: '12px 20px', display: 'inline-block', marginBottom: 12 }}>
             <img src="/haier-logo.png" alt="Haier" style={{ height: 36, filter: 'brightness(0) invert(1)' }} />
           </div>
-          <h1 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)' }}>Admin Panel</h1>
-          <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginTop: 4 }}>Haier TV Survey Management</p>
+          <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Haier Electrical Appliances (Thailand) Co., Ltd.</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--haier-blue)', fontWeight: 700, marginTop: 2, marginBottom: 8 }}>Sell out team</div>
+          <h1 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--text-primary)' }}>Admin Management Panel</h1>
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
