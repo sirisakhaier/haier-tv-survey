@@ -104,6 +104,7 @@ const app = express()
 app.use(cors())
 app.use(express.json({ limit: '50mb' }))
 app.use('/uploads', express.static(UPLOADS_DIR))
+app.use('/photos', express.static(UPLOADS_DIR))
 
 // Multer for photo uploads
 const storage = multer.diskStorage({
