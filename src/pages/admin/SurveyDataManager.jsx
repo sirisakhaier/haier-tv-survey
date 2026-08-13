@@ -1,11 +1,14 @@
 import { useState } from 'react'
 import Papa from 'papaparse'
+import ExcelJS from 'exceljs'
 import toast from 'react-hot-toast'
 
 export default function SurveyDataManager() {
   const [confirmReset, setConfirmReset] = useState('')
   const [resetting, setResetting] = useState(false)
-  const [exporting, setExporting] = useState(false)
+  const [exportingCSV, setExportingCSV] = useState(false)
+  const [exportingExcel, setExportingExcel] = useState(false)
+  const [exportProgress, setExportProgress] = useState('')
   const [submissions, setSubmissions] = useState([])
   const [loaded, setLoaded] = useState(false)
   const [search, setSearch] = useState('')
@@ -21,40 +24,206 @@ export default function SurveyDataManager() {
     }
   }
 
-  const handleExport = async () => {
-    setExporting(true)
+  // 1. Export Without Pictures (CSV - URL Only)
+  const handleExportWithoutPictures = async () => {
+    setExportingCSV(true)
     try {
       const res = await fetch('/api/admin/export')
       const data = await res.json()
-      const rows = (data || []).map(r => ({
-        'Submission ID': r.id,
-        'Store ID': r.store_id,
-        'ห้าง': r.hang,
-        'ภูมิภาค': r.phumipak,
-        'จังหวัด': r.changwat,
-        'สาขา': r.sakha,
-        'ชื่อผู้กรอก': r.respondent_name,
-        'เบอร์โทร': r.phone,
-        'Model': r.model_code,
-        'Sub Category': r.sub_category,
-        'Size': r.size,
-        'Location TH': r.location_label_th,
-        'Location EN': r.location_label_en,
-        'วันที่ส่ง': r.submitted_at,
-      }))
+      const origin = window.location.origin
+
+      const rows = (data || []).map(r => {
+        const photoUrls = r.photo_urls
+          ? r.photo_urls.split(', ').map(p => p.startsWith('http') ? p : origin + p).join('\n')
+          : ''
+
+        return {
+          'Submission ID': r.id,
+          'Store ID': r.store_id,
+          'ห้าง': r.hang,
+          'ภูมิภาค': r.phumipak,
+          'จังหวัด': r.changwat,
+          'สาขา': r.sakha,
+          'ชื่อร้าน (Store Name)': r.store_name || '',
+          'ชื่อผู้กรอก': r.respondent_name,
+          'เบอร์โทร': r.phone,
+          'Model': r.model_code,
+          'Sub Category': r.sub_category,
+          'Size': r.size,
+          'Location TH': r.location_label_th,
+          'Location EN': r.location_label_en,
+          'วันที่ส่ง': r.submitted_at ? new Date(r.submitted_at).toLocaleString('th-TH') : '',
+          'Photo URLs (ลิงก์รูปภาพ)': photoUrls,
+        }
+      })
+
       const csv = Papa.unparse(rows)
-      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' }) // BOM for Thai
+      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `haier_survey_data_${new Date().toISOString().slice(0,10)}.csv`
+      a.download = `haier_survey_url_only_${new Date().toISOString().slice(0,10)}.csv`
       a.click()
       URL.revokeObjectURL(url)
-      toast.success('Export สำเร็จ')
-    } catch {
-      toast.error('Export ล้มเหลว')
+      toast.success('ส่งออก CSV (ไม่มีรูปภาพ) สำเร็จ')
+    } catch (err) {
+      toast.error('ส่งออก CSV ล้มเหลว: ' + err.message)
     } finally {
-      setExporting(false)
+      setExportingCSV(false)
+    }
+  }
+
+  // Helper to fetch image buffer for Excel embedding
+  const fetchImageBuffer = async (url) => {
+    try {
+      const res = await fetch(url)
+      if (!res.ok) return null
+      const blob = await res.blob()
+      const arrayBuffer = await blob.arrayBuffer()
+      const type = blob.type.includes('png') ? 'png' : 'jpeg'
+      return { buffer: new Uint8Array(arrayBuffer), type }
+    } catch {
+      return null
+    }
+  }
+
+  // 2. Export With Pictures (Excel .xlsx with embedded thumbnails & URLs)
+  const handleExportWithPictures = async () => {
+    setExportingExcel(true)
+    setExportProgress('กำลังเตรียมข้อมูล...')
+    try {
+      const res = await fetch('/api/admin/export')
+      const data = await res.json()
+      const origin = window.location.origin
+
+      if (!data || data.length === 0) {
+        toast.error('ไม่มีข้อมูลสำหรับส่งออก')
+        setExportingExcel(false)
+        return
+      }
+
+      const workbook = new ExcelJS.Workbook()
+      const worksheet = workbook.addWorksheet('Survey Data with Photos')
+
+      // Columns setup
+      const baseCols = [
+        { header: 'Submission ID', key: 'id', width: 14 },
+        { header: 'Store ID', key: 'store_id', width: 14 },
+        { header: 'ห้าง', key: 'hang', width: 16 },
+        { header: 'ภูมิภาค', key: 'phumipak', width: 22 },
+        { header: 'จังหวัด', key: 'changwat', width: 16 },
+        { header: 'สาขา', key: 'sakha', width: 22 },
+        { header: 'ชื่อร้าน (Store Name)', key: 'store_name', width: 28 },
+        { header: 'ชื่อผู้กรอก', key: 'respondent_name', width: 20 },
+        { header: 'เบอร์โทร', key: 'phone', width: 15 },
+        { header: 'Model', key: 'model_code', width: 18 },
+        { header: 'Sub Category', key: 'sub_category', width: 14 },
+        { header: 'Size', key: 'size', width: 10 },
+        { header: 'Location TH', key: 'location_label_th', width: 14 },
+        { header: 'Location EN', key: 'location_label_en', width: 14 },
+        { header: 'วันที่ส่ง', key: 'submitted_at', width: 20 },
+        { header: 'Photo URLs (ลิงก์)', key: 'photo_urls', width: 35 },
+      ]
+
+      // Determine maximum number of photos per submission
+      let maxPhotos = 3
+      data.forEach(r => {
+        if (r.photo_urls) {
+          const count = r.photo_urls.split(', ').length
+          if (count > maxPhotos) maxPhotos = count
+        }
+      })
+
+      // Add thumbnail columns
+      for (let i = 1; i <= maxPhotos; i++) {
+        baseCols.push({ header: `Photo ${i} (พรีวิว)`, key: `thumb_${i}`, width: 16 })
+      }
+
+      worksheet.columns = baseCols
+
+      // Header row styling
+      const headerRow = worksheet.getRow(1)
+      headerRow.height = 28
+      headerRow.eachCell(cell => {
+        cell.font = { bold: true, color: { argb: 'FFFFFF' }, size: 10 }
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: '0047BA' } }
+        cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true }
+      })
+
+      // Process rows
+      let total = data.length
+      for (let idx = 0; idx < data.length; idx++) {
+        const r = data[idx]
+        setExportProgress(`กำลังโหลดรูปภาพและสร้าง Excel (${idx + 1}/${total})...`)
+
+        const rawUrls = r.photo_urls ? r.photo_urls.split(', ') : []
+        const fullUrls = rawUrls.map(p => p.startsWith('http') ? p : origin + p)
+
+        const rowValues = {
+          id: r.id,
+          store_id: r.store_id,
+          hang: r.hang,
+          phumipak: r.phumipak,
+          changwat: r.changwat,
+          sakha: r.sakha,
+          store_name: r.store_name || '',
+          respondent_name: r.respondent_name,
+          phone: r.phone,
+          model_code: r.model_code,
+          sub_category: r.sub_category,
+          size: r.size,
+          location_label_th: r.location_label_th,
+          location_label_en: r.location_label_en,
+          submitted_at: r.submitted_at ? new Date(r.submitted_at).toLocaleString('th-TH') : '',
+          photo_urls: fullUrls.join('\n'),
+        }
+
+        const addedRow = worksheet.addRow(rowValues)
+        addedRow.height = 65 // height for thumbnail
+        addedRow.eachCell(cell => {
+          cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true }
+        })
+
+        const rowIndex = addedRow.number // 1-indexed
+
+        // Fetch and embed photo thumbnails
+        for (let pIdx = 0; pIdx < fullUrls.length; pIdx++) {
+          const imgUrl = fullUrls[pIdx]
+          const imgData = await fetchImageBuffer(imgUrl)
+          if (imgData) {
+            try {
+              const imageId = workbook.addImage({
+                buffer: imgData.buffer,
+                extension: imgData.type,
+              })
+              const colIndex = 16 + pIdx // 0-indexed column (col 16 = 17th column = Photo 1)
+              worksheet.addImage(imageId, {
+                tl: { col: colIndex, row: rowIndex - 1 },
+                ext: { width: 75, height: 60 },
+                editAs: 'oneCell',
+              })
+            } catch (e) {
+              console.error('Image add error:', e)
+            }
+          }
+        }
+      }
+
+      setExportProgress('กำลังสร้างไฟล์ Excel...')
+      const buffer = await workbook.xlsx.writeBuffer()
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `haier_survey_with_pictures_${new Date().toISOString().slice(0,10)}.xlsx`
+      a.click()
+      URL.revokeObjectURL(url)
+      toast.success('ส่งออก Excel (มีรูปภาพพรีวิว) สำเร็จ!')
+    } catch (err) {
+      toast.error('ส่งออก Excel ล้มเหลว: ' + err.message)
+    } finally {
+      setExportingExcel(false)
+      setExportProgress('')
     }
   }
 
@@ -80,31 +249,75 @@ export default function SurveyDataManager() {
   return (
     <div className="fade-in">
       <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Survey Data</h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>จัดการและส่งออกข้อมูลแบบสำรวจ</p>
+        <h1 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Survey Data Export & Management</h1>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+          ส่งออกข้อมูลแบบสำรวจทีวี Haier (แยกแบบมีรูปภาพและไม่มีรูปภาพ)
+        </p>
       </div>
 
-      {/* Export & View */}
+      {/* Export Options Card */}
       <div className="card" style={{ marginBottom: 20 }}>
         <div className="card-header">
           <span>📊</span>
-          <div style={{ fontWeight: 700 }}>ส่งออกและดูข้อมูล (Export & View)</div>
+          <div style={{ fontWeight: 700 }}>ส่งออกข้อมูล (Export Options)</div>
         </div>
-        <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            <button className="btn btn--primary btn--sm" onClick={handleExport} disabled={exporting}>
-              {exporting ? <><div className="spinner" />กำลัง Export...</> : '⬇ Export CSV (ข้อมูลทั้งหมด)'}
-            </button>
-            <button className="btn btn--secondary btn--sm" onClick={loadSubmissions}>
-              📋 ดูรายการส่ง
+        <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+          {/* Export Buttons */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 14 }}>
+
+            {/* 1. Export Without Pictures (URL Only) */}
+            <div style={{ background: '#F7FAFC', border: '1px solid var(--border-light)', borderRadius: 'var(--radius-md)', padding: 16, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 12 }}>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  📄 1. ส่งออก CSV (ไม่มีรูปภาพ - มีเฉพาะลิงก์)
+                </div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                  ดาวน์โหลดไฟล์ CSV รวดเร็ว มีเฉพาะ URL ลิงก์รูปภาพ สำหรับใช้วิเคราะห์ข้อมูล
+                </div>
+              </div>
+              <button
+                className="btn btn--secondary btn--block btn--sm"
+                onClick={handleExportWithoutPictures}
+                disabled={exportingCSV || exportingExcel}
+              >
+                {exportingCSV ? <><div className="spinner spinner--blue" />กำลัง Export CSV...</> : '⬇️ ดาวน์โหลด CSV (Without Pictures)'}
+              </button>
+            </div>
+
+            {/* 2. Export With Pictures (Excel with Thumbnails & URLs) */}
+            <div style={{ background: 'var(--haier-blue-pale)', border: '1px solid var(--border-blue)', borderRadius: 'var(--radius-md)', padding: 16, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 12 }}>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--haier-blue)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  🖼️ 2. ส่งออก Excel (มีรูปภาพพรีวิว + ลิงก์)
+                </div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: 4 }}>
+                  ดาวน์โหลดไฟล์ Excel (.xlsx) ที่มีรูปภาพ Thumbnail ฝังอยู่ในตาราง พร้อมลิงก์รูปภาพ
+                </div>
+              </div>
+              <button
+                className="btn btn--primary btn--block btn--sm"
+                onClick={handleExportWithPictures}
+                disabled={exportingCSV || exportingExcel}
+              >
+                {exportingExcel ? <><div className="spinner" />{exportProgress || 'กำลัง Export Excel...'}</> : '🖼️ ดาวน์โหลด Excel (With Pictures)'}
+              </button>
+            </div>
+
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8 }}>
+            <button className="btn btn--ghost btn--sm" onClick={loadSubmissions} style={{ color: 'var(--haier-blue)' }}>
+              📋 ดูตารางรายการส่ง ({submissions.length || 'คลิกเพื่อโหลด'})
             </button>
           </div>
 
+          {/* Submissions Table Preview */}
           {loaded && (
             <>
               <div className="search-bar">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-                <input className="form-input" style={{ paddingLeft: 40 }} placeholder="ค้นหา..." value={search} onChange={e => setSearch(e.target.value)} />
+                <input className="form-input" style={{ paddingLeft: 40 }} placeholder="ค้นหารายการ..." value={search} onChange={e => setSearch(e.target.value)} />
               </div>
               {filtered.length === 0
                 ? <div className="empty-state"><div className="empty-state__icon">📭</div><div className="empty-state__text">ไม่มีข้อมูล</div></div>
@@ -112,7 +325,7 @@ export default function SurveyDataManager() {
                 <div className="data-table-wrap">
                   <table className="data-table">
                     <thead>
-                      <tr><th>ID</th><th>ร้าน</th><th>ผู้กรอก</th><th>รุ่น (items)</th><th>รูป</th><th>วันที่</th></tr>
+                      <tr><th>ID</th><th>ร้านค้า</th><th>ผู้กรอก</th><th>รุ่น (items)</th><th>รูป</th><th>วันที่</th></tr>
                     </thead>
                     <tbody>
                       {filtered.slice(0, 100).map(r => (
