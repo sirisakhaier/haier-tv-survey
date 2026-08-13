@@ -1,17 +1,19 @@
-import { Outlet, NavLink, useNavigate } from 'react-router-dom'
+import { Outlet, NavLink, useNavigate } from 'react'
 import { useAdminAuth } from '../../context/AdminAuthContext'
 import ThemeToggle from '../../components/ThemeToggle'
 
-const NAV_ITEMS = [
-  { to: '/admin',            icon: '📊', label: 'Dashboard' },
+const ALL_NAV_ITEMS = [
+  { to: '/admin',            icon: '📊', label: 'Dashboard', adminOnly: true },
   { to: '/admin/report',     icon: '📈', label: 'Report' },
-  { to: '/admin/dimensions', icon: '📋', label: 'Dimensions' },
+  { to: '/admin/dimensions', icon: '📋', label: 'Dimensions', adminOnly: true },
   { to: '/admin/data',       icon: '🗂️', label: 'Survey Data' },
 ]
 
 export default function AdminLayout() {
-  const { logout } = useAdminAuth()
+  const { logout, isViewer } = useAdminAuth()
   const navigate = useNavigate()
+
+  const navItems = ALL_NAV_ITEMS.filter(item => !(isViewer && item.adminOnly))
 
   const handleLogout = () => {
     logout()
@@ -32,9 +34,14 @@ export default function AdminLayout() {
           <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.2 }}>
             Haier Electrical Appliances (Thailand) Co., Ltd.
           </span>
-          <span style={{ fontSize: '0.65rem', color: '#90CDF4', fontWeight: 700 }}>
-            Sell out team
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', marginTop: 2 }}>
+            <span style={{ fontSize: '0.65rem', color: '#90CDF4', fontWeight: 700 }}>
+              Sell out team
+            </span>
+            <span style={{ fontSize: '0.65rem', padding: '1px 6px', borderRadius: 8, background: isViewer ? '#ED8936' : '#3182CE', color: '#fff', fontWeight: 700 }}>
+              {isViewer ? '👁️ Viewer' : '🔑 Admin'}
+            </span>
+          </div>
         </div>
 
         <div style={{ padding: '8px 12px' }}>
@@ -42,7 +49,7 @@ export default function AdminLayout() {
         </div>
 
         <nav className="admin-nav">
-          {NAV_ITEMS.map(item => (
+          {navItems.map(item => (
             <NavLink
               key={item.to}
               to={item.to}

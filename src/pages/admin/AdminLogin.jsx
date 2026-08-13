@@ -5,14 +5,14 @@ import ThemeToggle from '../../components/ThemeToggle'
 import toast from 'react-hot-toast'
 
 export default function AdminLogin() {
-  const { login, isAuthenticated } = useAdminAuth()
+  const { login, isAuthenticated, isViewer } = useAdminAuth()
   const navigate = useNavigate()
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // If already logged in, redirect declaratively
+  // If already logged in, redirect declaratively based on role
   if (isAuthenticated) {
-    return <Navigate to="/admin" replace />
+    return <Navigate to={isViewer ? '/admin/report' : '/admin'} replace />
   }
 
   const handleSubmit = async (e) => {
@@ -20,14 +20,18 @@ export default function AdminLogin() {
     if (!password) return
     setLoading(true)
     try {
-      const ok = await login(password)
-      if (ok) {
-        toast.success('เข้าสู่ระบบสำเร็จ')
-        navigate('/admin', { replace: true })
+      const res = await login(password)
+      if (res?.ok) {
+        toast.success(`เข้าสู่ระบบสำเร็จ (${res.role === 'viewer' ? 'Viewer Mode' : 'Admin Mode'})`)
+        if (res.role === 'viewer') {
+          navigate('/admin/report', { replace: true })
+        } else {
+          navigate('/admin', { replace: true })
+        }
       } else {
-        toast.error('รหัสผ่านไม่ถูกต้อง (Default: admin1234)')
+        toast.error('รหัสผ่านไม่ถูกต้อง (Admin: admin1234 | Viewer: viewer1234)')
       }
-    } catch (err) {
+    } catch {
       toast.error('เกิดข้อผิดพลาดในการเข้าสู่ระบบ')
     } finally {
       setLoading(false)
@@ -38,13 +42,13 @@ export default function AdminLogin() {
     <div className="login-page" style={{ position: 'relative' }}>
       <ThemeToggle style={{ position: 'absolute', top: 20, right: 20, zIndex: 10 }} />
       <div className="login-card">
-        <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <div style={{ display: 'inline-block', marginBottom: 12 }}>
+        <div style={{ textAlign: 'center', marginBottom: 20 }}>
+          <div style={{ display: 'inline-block', marginBottom: 10 }}>
             <img src="/haier-logo.png" alt="Haier" style={{ height: 52, width: 52, borderRadius: 10, border: '2px solid var(--border-blue)' }} />
           </div>
           <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Haier Electrical Appliances (Thailand) Co., Ltd.</div>
           <div style={{ fontSize: '0.75rem', color: 'var(--haier-blue)', fontWeight: 700, marginTop: 2, marginBottom: 8 }}>Sell out team</div>
-          <h1 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--text-primary)' }}>Admin Management Panel</h1>
+          <h1 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--text-primary)' }}>Admin & Viewer Panel</h1>
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -71,7 +75,11 @@ export default function AdminLogin() {
           </button>
         </form>
 
-        <div style={{ textAlign: 'center', marginTop: 20 }}>
+        <div style={{ marginTop: 18, padding: '10px 12px', background: 'var(--haier-blue-pale)', borderRadius: 8, fontSize: '0.75rem', color: 'var(--text-secondary)', textAlign: 'center' }}>
+          💡 <strong>Passwords:</strong> Admin (<code>admin1234</code>) | Viewer (<code>viewer1234</code>)
+        </div>
+
+        <div style={{ textAlign: 'center', marginTop: 16 }}>
           <a href="/" style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>← กลับหน้าสำรวจ</a>
         </div>
       </div>

@@ -178,8 +178,10 @@ function adminAuth(req, res, next) {
 // Admin login
 app.post('/api/admin/login', (req, res) => {
   const { password } = req.body
-  if (password === ADMIN_PASSWORD) {
-    res.json({ ok: true })
+  if (password === (process.env.ADMIN_PASSWORD || 'admin1234')) {
+    res.json({ ok: true, role: 'admin' })
+  } else if (password === (process.env.VIEWER_PASSWORD || 'viewer1234')) {
+    res.json({ ok: true, role: 'viewer' })
   } else {
     res.status(401).json({ error: 'Invalid password' })
   }
