@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSurvey } from '../../context/SurveyContext'
 import { useData } from '../../context/DataContext'
@@ -12,6 +12,19 @@ export default function Step1Store() {
   const { hangs, regionsForHang, branchesForHangRegion, loading } = useData()
   const [touched, setTouched] = useState(false)
   const [useSearchMode, setUseSearchMode] = useState(false)
+
+  const [surveyedStoreIds, setSurveyedStoreIds] = useState(new Set())
+  const [showWarnModal, setShowWarnModal] = useState(false)
+  const [pendingStore, setPendingStore] = useState(null)
+
+  useEffect(() => {
+    fetch('/api/stores/surveyed')
+      .then(res => res.json())
+      .then(ids => {
+        if (Array.isArray(ids)) setSurveyedStoreIds(new Set(ids))
+      })
+      .catch(() => {})
+  }, [])
 
   const regions = useMemo(() => survey.hang ? regionsForHang(survey.hang) : [], [survey.hang, regionsForHang])
   const branches = useMemo(() => (survey.hang && survey.phumipak) ? branchesForHangRegion(survey.hang, survey.phumipak) : [], [survey.hang, survey.phumipak, branchesForHangRegion])
@@ -37,6 +50,10 @@ export default function Step1Store() {
         storeName: store.store_name,
         changwat: store.changwat
       })
+      if (surveyedStoreIds.has(storeId)) {
+        setPendingStore(store)
+        setShowWarnModal(true)
+      }
     }
   }
 
@@ -203,6 +220,91 @@ export default function Step1Store() {
           Haier Electrical Appliances (Thailand) Co., Ltd. · Sell out team
         </footer>
       </div>
+
+      {/* Existing Survey Data Warning Modal */}
+      {showWarnModal && (
+        <div
+          className="fade-in"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 99999,
+            background: 'rgba(0, 0, 0, 0.75)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 16,
+          }}
+        >
+          <div
+            className="card scale-in"
+            style={{
+              maxWidth: 440,
+              width: '100%',
+              padding: 24,
+              borderRadius: 20,
+              boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-color)',
+            }}
+          >
+            <div style={{ textAlign: 'center', marginBottom: 16 }}>
+              <div style={{ fontSize: '2.8rem', marginBottom: 6 }}>⚠️</div>
+              <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: 6, lineHeight: 1.3 }}>
+                แจ้งเตือน: ร้านค้านี้เคยส่งแบบสำรวจแล้ว
+              </h2>
+              <div style={{ fontSize: '0.75rem', color: '#C05621', fontWeight: 700, background: '#FEEBC8', padding: '3px 10px', borderRadius: 12, display: 'inline-block' }}>
+                Existing Survey Data Detected
+              </div>
+            </div>
+
+            <div style={{ background: 'var(--haier-blue-pale)', border: '1px solid var(--border-blue)', padding: 14, borderRadius: 12, marginBottom: 16, fontSize: '0.85rem' }}>
+              <div style={{ fontWeight: 700, color: 'var(--haier-blue)', marginBottom: 2 }}>
+                🏢 สาขา: {pendingStore?.sakha}
+              </div>
+              {pendingStore?.store_name && pendingStore.store_name !== pendingStore.sakha && (
+                <div style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginBottom: 2 }}>
+                  Store Name: {pendingStore?.store_name}
+                </div>
+              )}
+              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                จังหวัด: {pendingStore?.changwat} · Store ID: <code style={{ fontFamily: 'monospace' }}>{pendingStore?.store_id}</code>
+              </div>
+            </div>
+
+            <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 20, textAlign: 'center' }}>
+              ร้านค้านี้มีข้อมูลการสำรวจบันทึกอยู่ในระบบแล้ว หากท่านส่งข้อมูลในครั้งนี้
+              <br/>
+              <strong style={{ color: '#E53E3E', fontWeight: 800 }}>
+                ข้อมูลและรูปภาพเดิมจะถูกลบและแทนที่ด้วยข้อมูลใหม่ทั้งหมด
+              </strong>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <button
+                type="button"
+                className="btn btn--primary btn--block"
+                style={{ background: '#E53E3E', color: '#fff', fontWeight: 700, padding: '12px' }}
+                onClick={() => setShowWarnModal(false)}
+              >
+                🗑️ ดำเนินการต่อ (แทนที่ข้อมูลเดิม)
+              </button>
+              <button
+                type="button"
+                className="btn btn--secondary btn--block"
+                style={{ padding: '12px' }}
+                onClick={() => {
+                  update({ storeId: '', sakha: '', storeName: '', changwat: '' })
+                  setShowWarnModal(false)
+                }}
+              >
+                ↩️ เปลี่ยนไปเลือกสาขาอื่น
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

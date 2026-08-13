@@ -120,6 +120,14 @@ const upload = multer({ storage, limits: { fileSize: 15 * 1024 * 1024 } })
 app.get('/api/stores', (req, res) => {
   res.json(db.prepare('SELECT * FROM stores').all())
 })
+app.get('/api/stores/surveyed', (req, res) => {
+  try {
+    const rows = db.prepare('SELECT DISTINCT store_id FROM survey_submissions WHERE store_id IS NOT NULL').all()
+    res.json(rows.map(r => r.store_id))
+  } catch (e) {
+    res.status(500).json({ error: e.message })
+  }
+})
 app.get('/api/models', (req, res) => {
   res.json(db.prepare('SELECT * FROM models').all())
 })
