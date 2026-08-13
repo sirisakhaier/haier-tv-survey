@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import Papa from 'papaparse'
 import ExcelJS from 'exceljs'
+import { useAdminAuth } from '../../context/AdminAuthContext'
 import toast from 'react-hot-toast'
 
 export default function SurveyDataManager() {
+  const { isViewer } = useAdminAuth()
   const [confirmReset, setConfirmReset] = useState('')
   const [resetting, setResetting] = useState(false)
   const [exportingCSV, setExportingCSV] = useState(false)
@@ -386,34 +388,36 @@ export default function SurveyDataManager() {
         </div>
       </div>
 
-      {/* Danger Zone */}
-      <div className="danger-zone">
-        <div className="danger-zone__title">⚠️ Danger Zone — รีเซ็ตข้อมูลแบบสำรวจ</div>
-        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: 16, lineHeight: 1.7 }}>
-          การดำเนินการนี้จะ <strong>ลบข้อมูลแบบสำรวจทั้งหมด</strong> รวมถึงรูปภาพที่อัพโหลด
-          ข้อมูลอ้างอิง (Store/Model/Location) จะ<strong>ไม่</strong>ถูกลบ
-          <br/>การดำเนินการนี้ไม่สามารถย้อนกลับได้
-        </p>
-        <div className="form-group" style={{ marginBottom: 12 }}>
-          <label className="form-label">พิมพ์ <code style={{ background: '#FED7D7', padding: '1px 6px', borderRadius: 4, fontFamily: 'monospace' }}>RESET</code> เพื่อยืนยัน</label>
-          <input
-            id="reset-confirm-input"
-            className={`form-input${confirmReset && confirmReset !== 'RESET' ? ' error' : ''}`}
-            value={confirmReset}
-            onChange={e => setConfirmReset(e.target.value)}
-            placeholder="พิมพ์ RESET"
-            style={{ maxWidth: 300, fontFamily: 'monospace', letterSpacing: '0.05em' }}
-          />
+      {/* Danger Zone (Admin Only) */}
+      {!isViewer && (
+        <div className="danger-zone">
+          <div className="danger-zone__title">⚠️ Danger Zone — รีเซ็ตข้อมูลแบบสำรวจ</div>
+          <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: 16, lineHeight: 1.7 }}>
+            การดำเนินการนี้จะ <strong>ลบข้อมูลแบบสำรวจทั้งหมด</strong> รวมถึงรูปภาพที่อัพโหลด
+            ข้อมูลอ้างอิง (Store/Model/Location) จะ<strong>ไม่</strong>ถูกลบ
+            <br/>การดำเนินการนี้ไม่สามารถย้อนกลับได้
+          </p>
+          <div className="form-group" style={{ marginBottom: 12 }}>
+            <label className="form-label">พิมพ์ <code style={{ background: '#FED7D7', padding: '1px 6px', borderRadius: 4, fontFamily: 'monospace' }}>RESET</code> เพื่อยืนยัน</label>
+            <input
+              id="reset-confirm-input"
+              className={`form-input${confirmReset && confirmReset !== 'RESET' ? ' error' : ''}`}
+              value={confirmReset}
+              onChange={e => setConfirmReset(e.target.value)}
+              placeholder="พิมพ์ RESET"
+              style={{ maxWidth: 300, fontFamily: 'monospace', letterSpacing: '0.05em' }}
+            />
+          </div>
+          <button
+            id="reset-data-btn"
+            className="btn btn--danger"
+            disabled={confirmReset !== 'RESET' || resetting}
+            onClick={handleReset}
+          >
+            {resetting ? <><div className="spinner spinner--blue" />กำลังรีเซ็ต...</> : '🗑 รีเซ็ตข้อมูลแบบสำรวจทั้งหมด'}
+          </button>
         </div>
-        <button
-          id="reset-data-btn"
-          className="btn btn--danger"
-          disabled={confirmReset !== 'RESET' || resetting}
-          onClick={handleReset}
-        >
-          {resetting ? <><div className="spinner spinner--blue" />กำลังรีเซ็ต...</> : '🗑 รีเซ็ตข้อมูลแบบสำรวจทั้งหมด'}
-        </button>
-      </div>
+      )}
     </div>
   )
 }
