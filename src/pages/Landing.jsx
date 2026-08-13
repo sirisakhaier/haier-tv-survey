@@ -83,10 +83,21 @@ export default function Landing() {
         <footer style={{ textAlign: 'center', marginTop: 24, fontSize: '0.78rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: 6 }}>
           <div style={{ fontWeight: 600 }}>Haier Electrical Appliances (Thailand) Co., Ltd.</div>
           <div>Sell out team</div>
-          <div style={{ marginTop: 6 }}>
-            <a href="/admin/login" style={{ color: 'var(--haier-blue)', textDecoration: 'underline' }}>
-              Admin Module
-            </a>
+          <div style={{ marginTop: 10, display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button
+              className="btn btn--secondary btn--sm"
+              style={{ fontSize: '0.8rem', padding: '6px 14px', borderRadius: 18 }}
+              onClick={() => navigate('/admin/login?role=admin')}
+            >
+              🔑 Admin Sign In
+            </button>
+            <button
+              className="btn btn--secondary btn--sm"
+              style={{ fontSize: '0.8rem', padding: '6px 14px', borderRadius: 18 }}
+              onClick={() => navigate('/admin/login?role=viewer')}
+            >
+              👁️ Viewer Sign In
+            </button>
           </div>
         </footer>
       </div>

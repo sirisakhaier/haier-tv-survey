@@ -1,4 +1,4 @@
-import { Outlet, NavLink, useNavigate } from 'react'
+import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAdminAuth } from '../../context/AdminAuthContext'
 import ThemeToggle from '../../components/ThemeToggle'
 
