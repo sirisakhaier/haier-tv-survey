@@ -6,22 +6,9 @@ pages_build_output_dir = "dist"
 [[d1_databases]]
 binding = "DB"
 database_name = "haier_survey_db"
-database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+database_id = "628b4d40-f926-4a41-8b54-0f648b5f8e0d"
 
 # ─── R2 Bucket ───────────────────────────────────────────
 [[r2_buckets]]
 binding = "PHOTOS"
 bucket_name = "haier-survey-photos"
-
-# ─── Production environment ───────────────────────────────
-[env.production]
-name = "haier-tv-survey"
-
-# ─── Preview environment ──────────────────────────────────
-[env.preview]
-name = "haier-tv-survey-preview"
-
-# ─── Secrets (set via wrangler CLI, never commit values) ──
-# npx wrangler secret put ADMIN_PASSWORD
-# Local dev: create .dev.vars file (gitignored):
-#   ADMIN_PASSWORD=admin1234
