@@ -1,31 +1,45 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSurvey } from '../../context/SurveyContext'
+import ThemeToggle from '../../components/ThemeToggle'
 import toast from 'react-hot-toast'
 
 export default function ReviewSubmit() {
   const navigate = useNavigate()
-  const { survey, reset } = useSurvey()
+  const { survey, resetSurvey } = useSurvey()
   const [submitting, setSubmitting] = useState(false)
 
   const handleSubmit = async () => {
     setSubmitting(true)
     try {
       const formData = new FormData()
-      formData.append('store_id', survey.storeId)
-      formData.append('respondent_name', survey.respondentName)
-      formData.append('phone', survey.phone)
+      formData.append('storeId',        survey.storeId)
+      formData.append('storeName',      survey.storeName || survey.sakha)
+      formData.append('hang',           survey.hang)
+      formData.append('phumipak',       survey.phumipak)
+      formData.append('changwat',       survey.changwat || '')
+      formData.append('sakha',          survey.sakha)
+      formData.append('respondentName', survey.respondentName)
+      formData.append('phone',          survey.phone)
+
       formData.append('entries', JSON.stringify(survey.entries))
-      survey.photos.forEach((p, i) => {
-        formData.append('photos', p.file, p.name || `photo_${i}.jpg`)
+
+      survey.photos.forEach(p => {
+        formData.append('photos', p.file, p.name || 'photo.jpg')
       })
 
-      const res = await fetch('/api/submissions', { method: 'POST', body: formData })
-      if (!res.ok) throw new Error('Server error')
+      const res = await fetch('/api/submissions', {
+        method: 'POST',
+        body: formData,
+      })
 
-      navigate('/survey/success')
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'Submission failed')
+
+      resetSurvey()
+      navigate('/survey/success', { replace: true, state: { submissionId: json.id } })
     } catch (err) {
-      toast.error('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง', { duration: 5000 })
+      toast.error(`ส่งข้อมูลล้มเหลว: ${err.message}`)
     } finally {
       setSubmitting(false)
     }
@@ -45,6 +59,7 @@ export default function ReviewSubmit() {
             </div>
             <div style={{ fontSize: '0.78rem', opacity: 0.8 }}>Review & Submit</div>
           </div>
+          <ThemeToggle />
         </div>
       </header>
 

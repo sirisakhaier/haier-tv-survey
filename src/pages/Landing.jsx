@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import ThemeToggle from '../components/ThemeToggle'
 
 export default function Landing() {
   const navigate = useNavigate()
@@ -26,6 +27,7 @@ export default function Landing() {
     <div className="survey-page fade-in">
       {/* Hero Header */}
       <header className="landing-hero">
+        <ThemeToggle style={{ position: 'absolute', top: 16, right: 16, zIndex: 10 }} />
         <img src="/haier-logo.png" alt="Haier Logo" className="landing-hero__logo" />
         <div className="landing-hero__company">Haier Electrical Appliances (Thailand) Co., Ltd.</div>
         <div style={{ margin: '6px 0 12px' }}>

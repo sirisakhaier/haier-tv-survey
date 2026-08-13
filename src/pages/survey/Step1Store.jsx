@@ -4,6 +4,7 @@ import { useSurvey } from '../../context/SurveyContext'
 import { useData } from '../../context/DataContext'
 import StepIndicator from '../../components/StepIndicator'
 import SearchableSelect from '../../components/SearchableSelect'
+import ThemeToggle from '../../components/ThemeToggle'
 
 export default function Step1Store() {
   const navigate = useNavigate()
@@ -70,6 +71,7 @@ export default function Step1Store() {
             </div>
             <div style={{ fontSize: '0.78rem', opacity: 0.8 }}>ขั้นตอนที่ 1 จาก 4 — เลือกร้านค้า</div>
           </div>
+          <ThemeToggle />
         </div>
         <StepIndicator current={1} />
       </header>

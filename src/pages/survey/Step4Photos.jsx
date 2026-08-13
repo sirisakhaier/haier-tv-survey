@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import imageCompression from 'browser-image-compression'
 import { useSurvey } from '../../context/SurveyContext'
 import StepIndicator from '../../components/StepIndicator'
+import ThemeToggle from '../../components/ThemeToggle'
 import toast from 'react-hot-toast'
 
 const MIN_PHOTOS = 3
@@ -86,6 +87,7 @@ export default function Step4Photos() {
             </div>
             <div style={{ fontSize: '0.78rem', opacity: 0.8 }}>ขั้นตอนที่ 4 จาก 4 — อัพโหลดรูปภาพ</div>
           </div>
+          <ThemeToggle />
         </div>
         <StepIndicator current={4} />
       </header>

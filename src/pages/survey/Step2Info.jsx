@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSurvey } from '../../context/SurveyContext'
 import StepIndicator from '../../components/StepIndicator'
+import ThemeToggle from '../../components/ThemeToggle'
 
 function validatePhone(p) {
   return /^0\d{9}$/.test(p.replace(/\s/g, ''))
@@ -47,6 +48,7 @@ export default function Step2Info() {
             </div>
             <div style={{ fontSize: '0.78rem', opacity: 0.8 }}>ขั้นตอนที่ 2 จาก 4 — ข้อมูลผู้กรอก</div>
           </div>
+          <ThemeToggle />
         </div>
         <StepIndicator current={2} />
       </header>

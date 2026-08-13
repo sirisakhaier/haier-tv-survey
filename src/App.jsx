@@ -58,13 +58,16 @@ class ErrorBoundary extends React.Component {
   }
 }
 
+import { ThemeProvider } from './context/ThemeContext'
+
 export default function App() {
   return (
     <ErrorBoundary>
-      <BrowserRouter>
-        <DataProvider>
-          <AdminAuthProvider>
-            <SurveyProvider>
+      <ThemeProvider>
+        <BrowserRouter>
+          <DataProvider>
+            <AdminAuthProvider>
+              <SurveyProvider>
               <Toaster
                 position="top-center"
                 toastOptions={{
@@ -97,6 +100,7 @@ export default function App() {
           </AdminAuthProvider>
         </DataProvider>
       </BrowserRouter>
-    </ErrorBoundary>
-  )
+    </ThemeProvider>
+  </ErrorBoundary>
+)
 }

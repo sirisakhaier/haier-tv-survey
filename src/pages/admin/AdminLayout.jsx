@@ -1,5 +1,6 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAdminAuth } from '../../context/AdminAuthContext'
+import ThemeToggle from '../../components/ThemeToggle'
 
 const NAV_ITEMS = [
   { to: '/admin',            icon: '📊', label: 'Dashboard' },
@@ -21,9 +22,11 @@ export default function AdminLayout() {
       {/* Sidebar */}
       <aside className="admin-sidebar">
         <div className="admin-sidebar__logo" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 4 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <img src="/haier-logo.png" alt="Haier" />
-            <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>TV Survey</span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <img src="/haier-logo.png" alt="Haier" />
+              <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>TV Survey</span>
+            </div>
           </div>
           <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.2 }}>
             Haier Electrical Appliances (Thailand) Co., Ltd.
@@ -32,6 +35,11 @@ export default function AdminLayout() {
             Sell out team
           </span>
         </div>
+
+        <div style={{ padding: '8px 12px' }}>
+          <ThemeToggle style={{ width: '100%', justifyContent: 'center' }} />
+        </div>
+
         <nav className="admin-nav">
           {NAV_ITEMS.map(item => (
             <NavLink

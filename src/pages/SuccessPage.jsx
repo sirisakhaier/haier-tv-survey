@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { useSurvey } from '../context/SurveyContext'
+import ThemeToggle from '../components/ThemeToggle'
 
 export default function SuccessPage() {
   const navigate = useNavigate()
@@ -11,7 +12,8 @@ export default function SuccessPage() {
   }
 
   return (
-    <div className="survey-page fade-in" style={{ alignItems: 'center', justifyContent: 'center', padding: '40px 20px', textAlign: 'center', background: 'linear-gradient(135deg, #F0F4FF 0%, #E8F5E9 100%)' }}>
+    <div className="survey-page fade-in" style={{ alignItems: 'center', justifyContent: 'center', padding: '40px 20px', textAlign: 'center', background: 'var(--bg-primary)', position: 'relative' }}>
+      <ThemeToggle style={{ position: 'absolute', top: 16, right: 16 }} />
       <div style={{ maxWidth: 380, width: '100%' }}>
         <div className="success-icon">✓</div>
         <h1 style={{ marginTop: 20, fontSize: '1.6rem', fontWeight: 800, color: 'var(--text-primary)' }}>

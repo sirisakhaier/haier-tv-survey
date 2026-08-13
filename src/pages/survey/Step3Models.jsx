@@ -4,6 +4,7 @@ import { useSurvey } from '../../context/SurveyContext'
 import { useData } from '../../context/DataContext'
 import StepIndicator from '../../components/StepIndicator'
 import SearchableSelect from '../../components/SearchableSelect'
+import ThemeToggle from '../../components/ThemeToggle'
 
 const LOCATION_ICONS = { wall: '🧱', table: '📺', pillar: '🏛️' }
 const SUB_CAT_CLASS = { 'QLED': 'qled', 'MINI-LED': 'miniled', 'OLED': 'oled', 'UHD': 'uhd', 'FHD': 'fhd' }
@@ -68,6 +69,7 @@ export default function Step3Models() {
             </div>
             <div style={{ fontSize: '0.78rem', opacity: 0.8 }}>ขั้นตอนที่ 3 จาก 4 — รุ่นทีวีและตำแหน่ง</div>
           </div>
+          <ThemeToggle />
         </div>
         <StepIndicator current={3} />
       </header>

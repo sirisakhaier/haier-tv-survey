@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate, Navigate } from 'react-router-dom'
 import { useAdminAuth } from '../../context/AdminAuthContext'
+import ThemeToggle from '../../components/ThemeToggle'
 import toast from 'react-hot-toast'
 
 export default function AdminLogin() {
@@ -34,7 +35,8 @@ export default function AdminLogin() {
   }
 
   return (
-    <div className="login-page">
+    <div className="login-page" style={{ position: 'relative' }}>
+      <ThemeToggle style={{ position: 'absolute', top: 20, right: 20, zIndex: 10 }} />
       <div className="login-card">
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
           <div style={{ display: 'inline-block', marginBottom: 12 }}>
