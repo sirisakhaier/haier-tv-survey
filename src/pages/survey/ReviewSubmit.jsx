@@ -6,7 +6,7 @@ import toast from 'react-hot-toast'
 
 export default function ReviewSubmit() {
   const navigate = useNavigate()
-  const { survey, resetSurvey } = useSurvey()
+  const { survey, reset } = useSurvey()
   const [submitting, setSubmitting] = useState(false)
 
   const handleSubmit = async () => {
@@ -38,7 +38,7 @@ export default function ReviewSubmit() {
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'Submission failed')
 
-      resetSurvey()
+      reset()
       navigate('/survey/success', { replace: true, state: { submissionId: json.id } })
     } catch (err) {
       toast.error(`ส่งข้อมูลล้มเหลว: ${err.message}`)
