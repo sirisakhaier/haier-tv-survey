@@ -1,6 +1,6 @@
 // functions/api/admin/import/[type].js
 // POST /api/admin/import/:type — import dimension CSV rows into D1
-// Replaces entire store or model catalog (DELETE ALL then INSERT)
+// Replaces entire store or model catalog (DELETE ALL then INSERT) with PRAGMA foreign_keys = OFF
 
 export async function onRequestPost({ params, request, env }) {
   try {
@@ -11,11 +11,12 @@ export async function onRequestPost({ params, request, env }) {
     let stmts = []
     let imported = 0
 
-    if (type === 'store') {
-      // Delete all existing stores to replace with whole import
-      await env.DB.prepare('DELETE FROM stores').run()
+    // Disable foreign key checks during replace-all import
+    await env.DB.prepare('PRAGMA foreign_keys = OFF;').run()
 
-      const stmt = env.DB.prepare('INSERT INTO stores (store_id,hang,phumipak,changwat,sakha,store_name,status) VALUES (?,?,?,?,?,?,?)')
+    if (type === 'store') {
+      await env.DB.prepare('DELETE FROM stores').run()
+      const stmt = env.DB.prepare('INSERT OR REPLACE INTO stores (store_id,hang,phumipak,changwat,sakha,store_name,status) VALUES (?,?,?,?,?,?,?)')
       for (const r of rows) {
         const id = r['Store ID(Primary key)'] || r['Store ID (Primary key)'] || r.store_id
         if (!id) continue
@@ -24,10 +25,8 @@ export async function onRequestPost({ params, request, env }) {
         imported++
       }
     } else if (type === 'model') {
-      // Delete all existing models to replace with whole import
       await env.DB.prepare('DELETE FROM models').run()
-
-      const stmt = env.DB.prepare('INSERT INTO models (model_code,category,sub_category,size) VALUES (?,?,?,?)')
+      const stmt = env.DB.prepare('INSERT OR REPLACE INTO models (model_code,category,sub_category,size) VALUES (?,?,?,?)')
       for (const r of rows) {
         const code = r['Model (Primary key)'] || r.model_code
         if (!code) continue
@@ -36,8 +35,7 @@ export async function onRequestPost({ params, request, env }) {
       }
     } else if (type === 'location') {
       await env.DB.prepare('DELETE FROM location_types').run()
-
-      const stmt = env.DB.prepare('INSERT INTO location_types (code,label_th,label_en) VALUES (?,?,?)')
+      const stmt = env.DB.prepare('INSERT OR REPLACE INTO location_types (code,label_th,label_en) VALUES (?,?,?)')
       for (const r of rows) {
         stmts.push(stmt.bind(r.code||r.Code, r.label_th||r.LabelTH, r.label_en||r.LabelEN))
         imported++
@@ -50,6 +48,8 @@ export async function onRequestPost({ params, request, env }) {
     for (let i = 0; i < stmts.length; i += 100) {
       await env.DB.batch(stmts.slice(i, i + 100))
     }
+
+    await env.DB.prepare('PRAGMA foreign_keys = ON;').run()
 
     return Response.json({ imported })
   } catch (e) {
